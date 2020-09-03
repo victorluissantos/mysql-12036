@@ -47,10 +47,34 @@ GROUP BY cl.nome
 ORDER BY 2 DESC
 
 -- 3 qual o cliente que possui o maior numero de comprovantes sem aprovacao = Nao
+SELECT 
+    cl.nome,
+    count(cl.id) as `total`
+FROM
+    barbearia.clientes cl
+        INNER JOIN
+    comprovantes co ON cl.id = co.cliente_id
+WHERE
+	co.aprovado = 'Nao'
+GROUP BY cl.nome
+ORDER BY 2 DESC;
 
 -- 4 qual o Estado (UF) que possui a maior quantidade de clientes
+SELECT 
+    cl.uf, COUNT(cl.id) AS `total`
+FROM
+    clientes cl
+GROUP BY cl.uf
+ORDER BY 2 DESC;
 
 -- 5 Qual a cidade que possui a maior quantidade de clientes
+SELECT 
+    cidade,
+    count(id) as `total`
+FROM
+    clientes
+GROUP BY cidade
+ORDER BY 2 desc
 
 -- 6 qual o host de email (@blabla) que mais tenho cadastrado em clientes [dica: use o like]
 SELECT
