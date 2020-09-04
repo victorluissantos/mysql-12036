@@ -86,12 +86,36 @@ SELECT
 FROM
     clientes cl;
 
--- 2 uma query que me retorn todos os pagamentos em boleto, com uma coluna informando se ja venceu
+/*Solucao Willian*/
+SELECT 
+	IF( MONTH(cl.data_nascimento) < MONTH(CURDATE()), 'fez', 
+		IF (MONTH(cl.data_nascimento) = MONTH(CURDATE()) 
+			AND DAY(cl.data_nascimento) <= DAY(CURDATE()), 'fez', 'nao fez')) as `aniversario`
+FROM
+    clientes cl;
+-- 2 uma query que me retorna todos os pagamentos em boleto, com uma coluna informando se ja venceu
 /*
 | cliente 		| data_servico 	| data_vencimento   | Situacao
 fulano 			|   20/08/2020	| 22/08/2020  		| Vencido
 beltrano		|   02/09/2020  | 04/09/2020        | A Vencer
 */
+SELECT 
+    cl.nome AS `cliente`,
+    DATE_FORMAT(co.data_transacao, '%d/%m/%Y') AS `data_servico`,
+    DATE_FORMAT(DATE_ADD(co.data_transacao,
+                INTERVAL 2 DAY),
+            '%d/%m/%Y') AS `data_vencimento`,
+    IF(DATE_ADD(co.data_transacao,
+            INTERVAL 2 DAY) > NOW(),
+        'Vencido',
+        'A Vencer') AS `vencimento`
+FROM
+    comprovantes co
+        INNER JOIN
+    clientes cl ON co.cliente_id = cl.id
+WHERE
+    co.forma = 'Boleto';
+
 -- 3 querouma query que me retorne a soma de cada forma de pagamento nos comprovantes, exemplo:
 /*
 | Boleto | Cartao | Dinheiro |
