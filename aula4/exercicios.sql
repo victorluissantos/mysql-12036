@@ -67,3 +67,39 @@ FROM
 GROUP BY 1 DESC
 ORDER BY 2 DESC
 limit 1;
+
+
+/** SEGUNDA LEVA DE EXERCICIOS */
+-- 1 uma tabela onde eu consiga ver a lista de clientes e uma coluna informando se o cliente ja fez aniversario este ano
+/*
+| nome 		| aniversario |
+fulano 		|   ja fez	  |
+beltrano	|   ainda nao |
+*/
+SELECT 
+    cl.nome,
+    IF(
+		DAY(cl.data_nascimento) >= DAY(CURDATE())
+        AND
+        MONTH(cl.data_nascimento) >= MONTH(CURDATE()), 'ja fez', 'ainda nao'
+    ) as `aniversario`
+FROM
+    clientes cl;
+
+-- 2 uma query que me retorn todos os pagamentos em boleto, com uma coluna informando se ja venceu
+/*
+| cliente 		| data_servico 	| data_vencimento   | Situacao
+fulano 			|   20/08/2020	| 22/08/2020  		| Vencido
+beltrano		|   02/09/2020  | 04/09/2020        | A Vencer
+*/
+-- 3 querouma query que me retorne a soma de cada forma de pagamento nos comprovantes, exemplo:
+/*
+| Boleto | Cartao | Dinheiro |
+	3		12			27
+*/
+-- 4 Query com uma lista de clientes, verificando o possivel genero deste atravez do servico que o cliente ja realizou
+/*
+| cliente	|	Genero	     |
+| victor	|	Indefido     |
+| helena	| 	Feminino(a)  |
+| Joao		| 	Masculino(a) |

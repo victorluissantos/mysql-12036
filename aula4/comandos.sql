@@ -28,4 +28,37 @@ SELECT
 FROM
     clientes cl;
 
--- weekday()    
+-- weekday()
+SELECT DISTINCT
+    cl.nome,
+    IF(co.cliente_id is Null, 'nunca', 'ja') as `ja_usou_servicos`
+FROM
+    clientes cl
+    LEFT JOIN
+    comprovantes co on cl.id = co.cliente_id
+
+ /* Explicacao 1 */
+SELECT 
+    DATE_ADD(data_transacao, INTERVAL 20 DAY) as `vencimento`,
+    data_transacao
+FROM
+    comprovantes;
+
+/* Explicacao 2 */
+SELECT DISTINCT
+    cl.nome,
+    IF(co.cliente_id is Null, 'nunca', 'ja') as `ja_usou_servicos`
+FROM
+    clientes cl
+    LEFT JOIN
+    comprovantes co on cl.id = co.cliente_id
+
+SELECT 
+    cl.nome,
+    IF(TIMESTAMPDIFF(YEAR,
+            cl.data_nascimento,
+            CURDATE()) >= 18 and  cl.uf = 'PR',
+        'Maior',
+        'Menor') AS `idade`
+FROM
+    clientes cl
