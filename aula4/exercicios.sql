@@ -121,9 +121,32 @@ WHERE
 | Boleto | Cartao | Dinheiro |
 	3		12			27
 */
+SELECT 
+    SUM(IF(co.forma='Boleto',1,0)) as `Boleto`,
+    SUM(IF(co.forma='Cartao',1,0)) as `Cartao`,
+    SUM(IF(co.forma='Dinheiro',1,0)) as `Dinheiro`
+FROM
+    comprovantes co;
+
 -- 4 Query com uma lista de clientes, verificando o possivel genero deste atravez do servico que o cliente ja realizou
 /*
 | cliente	|	Genero	     |
 | victor	|	Indefido     |
 | helena	| 	Feminino(a)  |
 | Joao		| 	Masculino(a) |
+*/
+SELECT DISTINCT
+    cl.nome,
+    IF(UPPER(se.nome) LIKE UPPER('%FEMININ%'),
+        'Feminino(a)',
+        IF(UPPER(se.nome) LIKE UPPER('%MASCULIN%'),
+            'Masculino(a)',
+            'Indefinido')) AS `Genero`
+FROM
+    clientes cl
+        INNER JOIN
+    comprovantes co ON cl.id = co.cliente_id
+        INNER JOIN
+    comprovante_servicos cs ON cs.comprovante_id = co.id
+        INNER JOIN
+    servicos se ON cs.servico_id = se.id
