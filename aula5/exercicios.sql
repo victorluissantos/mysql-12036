@@ -3,7 +3,14 @@
 | SP  |   PR  | RS  | SC  |
   10	 12		19		9
 */
-
+SELECT 
+    SUM(IF(cl.uf = 'PR', 1, 0)) AS `PR`,
+    SUM(IF(cl.uf = 'RS', 1, 0)) AS `RS`,
+    SUM(IF(cl.uf = 'SP', 1, 0)) AS `SP`,
+    SUM(IF(cl.uf = 'SC', 1, 0)) AS `SC`
+FROM
+    clientes cl;
+    
 -- 2 Qual a porctagem de cada forma de pagamento
 /*
 | Cartao | Boleto | Dinheiro |
@@ -58,7 +65,18 @@ FROM
 
 
 -- 4 Qual foi o servico mais vendido em cada ano de operacao da barbearia
-
+SELECT 
+    YEAR(c.data_transacao) as `ano`,
+    s.nome,
+    count(c.id) as `total`
+FROM
+    comprovantes c
+    INNER JOIN
+    comprovante_servicos cs ON c.id = cs.comprovante_id
+    INNER JOIN
+    servicos s ON cs.servico_id = s.id
+GROUP BY 1, 2
+ORDER BY 3 DESC;
 
 -- 5 Qual o maior furo de caixa, ou seja, a maior diferenca entre o valor pago em comprovante e o valor real do servico(s)
 
