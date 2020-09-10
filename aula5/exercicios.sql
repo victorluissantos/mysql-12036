@@ -10,7 +10,7 @@ SELECT
     SUM(IF(cl.uf = 'SC', 1, 0)) AS `SC`
 FROM
     clientes cl;
-    
+
 -- 2 Qual a porctagem de cada forma de pagamento
 /*
 | Cartao | Boleto | Dinheiro |
@@ -79,6 +79,43 @@ GROUP BY 1, 2
 ORDER BY 3 DESC;
 
 -- 5 Qual o maior furo de caixa, ou seja, a maior diferenca entre o valor pago em comprovante e o valor real do servico(s)
+SELECT 
+    c.valor,
+    sum(s.valor) as `total`,
+    sum(s.valor) - c.valor as `furo`
+FROM
+    comprovantes c
+        INNER JOIN
+    comprovante_servicos cs ON c.id = cs.comprovante_id
+        INNER JOIN
+    servicos s ON cs.servico_id = s.id
+GROUP BY c.id
+ORDER BY 3 DESC;
 
-
--- 6 Qual o servico mais comprado em combro, ou seja, quando um comprovante tem dois servicos, qual a combinacao que mais aparece
+-- 6 Qual o servico mais comprado em combo, ou seja, quando um comprovante tem dois servicos, qual a combinacao que mais aparece
+-- create view
+CREATE VIEW `grupo_servicos` AS
+(SELECT 
+    count(c.id) as `total`,
+    c.id
+FROM
+    comprovantes c
+        INNER JOIN
+    comprovante_servicos cs ON c.id = cs.comprovante_id
+GROUP BY c.id);
+-- use for result
+SELECT 
+    GROUP_CONCAT(s.nome) AS `servicos`, COUNT(cs.id) AS `total`
+FROM
+    servicos s
+        INNER JOIN
+    comprovante_servicos cs ON s.id = cs.servico_id
+WHERE
+    cs.comprovante_id IN (SELECT 
+            id
+        FROM
+            grupo_servicos
+        WHERE
+            total > 1)
+GROUP BY comprovante_id
+ORDER BY 2 DESC;
