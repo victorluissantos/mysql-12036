@@ -12,3 +12,24 @@ CREATE TABLE `marcacoes` (
   CONSTRAINT `fk_marcacoes_compromisso` FOREIGN KEY (`compromisso_id`) REFERENCES `compromissos` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_marcacoes_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+
+EXPLAIN SELECT 
+    u.nome, COUNT(c.id) AS `total`
+FROM
+    usuarios u
+        LEFT JOIN
+    compromissos c ON u.id = c.usuario_id
+GROUP BY u.id;
+
+-- outra opcao
+EXPLAIN SELECT 
+    u.nome,
+    (SELECT 
+            COUNT(c.id)
+        FROM
+            compromissos c
+        WHERE
+            c.usuario_id = u.id) AS `total`
+FROM
+    usuarios u;
