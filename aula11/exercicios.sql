@@ -96,6 +96,62 @@ BEGIN
 END
 
 -- 4. implementar funcao capaz de determinar a primeira letra de de uma string como maiusculo, exmeplo: saO pAuLo, retorno Sao Paulo
+delimiter $$
+
+CREATE DEFINER=`root`@`%` FUNCTION `upFirst`(palavra VARCHAR(40)) RETURNS varchar(40) CHARSET utf8 COLLATE utf8_bin
+BEGIN
+    DECLARE primeira_letra VARCHAR(1);
+    DECLARE restante_palavra VARCHAR(39);
+    
+    SET primeira_letra = (SELECT UPPER(SUBSTR(palavra, 1,1)));
+    SET restante_palavra = (SELECT LOWER(SUBSTR(palavra, 2, LENGTH(palavra))));
+    
+RETURN CONCAT(primeira_letra,restante_palavra);
+END$$
+
+
+USE `cartao_azul`;
+DROP function IF EXISTS `checknoriz`;
+
+DELIMITER $$
+USE `cartao_azul`$$
+CREATE FUNCTION `checknoriz` (nome VARCHAR(42))
+RETURNS VARCHAR(42)
+BEGIN
+    DECLARE qtd_palavras INT;
+    DECLARE palavra VARCHAR(25);
+    DECLARE frase VARCHAR(42) DEFAULT '';
+    DECLARE ind INT DEFAULT 1;
+    
+    SET qtd_palavras = (
+                            SELECT 
+                                LENGTH(nome) 
+                                    - LENGTH(REPLACE(nome, ' ', ''))+1
+                                    );
+
+    WHILE ind <= qtd_palavras DO
+        IF ind = 1 THEN
+            SET palavra = (SELECT SUBSTRING_INDEX(nome, ' ', 1));
+        ELSE
+            SET palavra = (SELECT substr(nome,
+                                    length(SUBSTRING_INDEX(nome, 
+                                    ' ', 
+                                    ind-1))+2,
+                                    length(SUBSTRING_INDEX(nome, 
+                                    ' ', 
+                                    ind))-(length(SUBSTRING_INDEX(nome, 
+                                    ' ', ind-1))+1)
+                            ));
+        END IF;
+        
+        SET ind = ind + 1;
+        SET frase = CONCAT(frase,' ',upFirst(palavra));
+    END WHILE;
+
+    RETURN frase;
+END$$
+
+DELIMITER ;
 -- 5. ao inserir nome de cidade, setar como maiuscula a primeira letra de cada parte do nome e cortar caso seja maior que os 65 estipulados
 -- 6. A mesma validacao a cima deve ser aplicada nos casos de update a tabela usuarios
 
