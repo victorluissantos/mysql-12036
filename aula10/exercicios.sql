@@ -83,4 +83,25 @@ DELIMITER ;
 -- 5 Ao tentar cadastrar um email que esteja na lista de ENUM('live', 'hotmail', 'gmail', 'yahoo') a trigger ira substituir o hot pelo primeiro nome fantazia da empresa, exemplo:
 -- Entrada: augusto@live.com, Saida: augusto@embalagens.com, onde o nome fantasia = Embalagens industrial LTDA
 -- OBS: isso so vai ocorrer se o nome fantasia for diferente de null
+CREATE DEFINER=`root`@`%` TRIGGER `tratofeito`.`empresas_BEFORE_INSERT` BEFORE INSERT ON `empresas` FOR EACH ROW
+BEGIN
+	DECLARE hostname VARCHAR(25);
 
+	SET NEW.telefone = REPLACE(
+					REPLACE(
+						REPLACE(
+							REPLACE(NEW.telefone, '(', '')
+                            , ')', '')
+					,'-','')
+				, ' ','');
+    
+    SET hostname = (substring_index(
+							substring_index(NEW.email, '@', -1), '.', 1)
+						);
+                        
+	IF hostname in ('live', 'hotmail', 'gmail', 'yahoo') THEN
+		IF NEW.nome_fantasia IS NOT NULL THEN
+			SET NEW.email = (lower(substring_index(NEW.nome_fantasia, ' ', 1)));
+		END IF;
+    END IF;
+END
