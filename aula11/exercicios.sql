@@ -115,8 +115,7 @@ DROP function IF EXISTS `checknoriz`;
 
 DELIMITER $$
 USE `cartao_azul`$$
-CREATE FUNCTION `checknoriz` (nome VARCHAR(42))
-RETURNS VARCHAR(42)
+CREATE FUNCTION `checknoriz`(nome VARCHAR(42)) RETURNS varchar(42)
 BEGIN
     DECLARE qtd_palavras INT;
     DECLARE palavra VARCHAR(25);
@@ -132,6 +131,7 @@ BEGIN
     WHILE ind <= qtd_palavras DO
         IF ind = 1 THEN
             SET palavra = (SELECT SUBSTRING_INDEX(nome, ' ', 1));
+            SET frase = upFirst(palavra);
         ELSE
             SET palavra = (SELECT substr(nome,
                                     length(SUBSTRING_INDEX(nome, 
@@ -142,19 +142,67 @@ BEGIN
                                     ind))-(length(SUBSTRING_INDEX(nome, 
                                     ' ', ind-1))+1)
                             ));
+            SET frase = CONCAT(frase,' ',upFirst(palavra));
         END IF;
         
         SET ind = ind + 1;
-        SET frase = CONCAT(frase,' ',upFirst(palavra));
     END WHILE;
 
     RETURN frase;
 END$$
 
 DELIMITER ;
+
 -- 5. ao inserir nome de cidade, setar como maiuscula a primeira letra de cada parte do nome e cortar caso seja maior que os 65 estipulados
+CREATE DEFINER=`root`@`%` TRIGGER `cartao_azul`.`usuarios_BEFORE_INSERT` BEFORE INSERT ON `usuarios` FOR EACH ROW
+BEGIN
+    IF LENGTH(NEW.identificador) > 11 THEN
+        SET NEW.tipo = 'CNPJ';
+    ELSE
+        SET NEW.tipo = 'CPF';
+    END IF;
+    
+    IF LENGTH(NEW.nome) = 42 THEN
+        SET NEW.nome = CREATE_NICK_NAME(NEw.nome);
+    END IF;
+    
+    SET NEW.cidade = checknoriz(NEW.cidade);
+    
+    SET NEW.uf = UPPER(NEW.uf);
+    
+END
+
 -- 6. A mesma validacao a cima deve ser aplicada nos casos de update a tabela usuarios
+CREATE DEFINER=`root`@`%` TRIGGER `cartao_azul`.`usuarios_BEFORE_UPDATE` BEFORE UPDATE ON `usuarios` FOR EACH ROW
+BEGIN
+    IF LENGTH(NEW.nome) = 42 THEN
+        SET NEW.nome = CREATE_NICK_NAME(NEw.nome);
+    END IF;
+    
+    SET NEW.cidade = checknoriz(NEW.cidade);
+    
+    SET NEW.uf = UPPER(NEW.uf);
+END
 
 -- 7. funcao capaz de limpar numero de telefone, cpf e cnpj
+CREATE FUNCTION `STR_REPLACE` (lstring VARCHAR(250), lplace VARCHAR(250), lsub VARCHAR(250))
+RETURNS VARCHAR(250)
+BEGIN
+
+    DECLARE qtd_caracteres INT;
+    DECLARE i INT DEFAULT 1;
+    DECLARE retorno VARCHAR(250) DEFAULT lstring;
+    DECLARE item VARCHAR(1);
+    
+    SET qtd_caracteres = (SELECT LENGTH(lplace));
+    
+    WHILE i <= qtd_caracteres DO
+        SET item = (SELECT substr(lplace, i, 1));
+        SET retorno = (SELECT REPLACE(retorno, item, lsub));
+        SET i = i+1;
+    END WHILE;
+
+    RETURN retorno;
+END
 -- 8. aplicar a funcao a cima toda vez que um identificado, telefone e ou celular for ser inserido
 -- 9. aplicar a funcao a cima toda vez que um identificado, telefone e ou celular for ser atualizado

@@ -1,5 +1,3 @@
-CREATE DATABASE  IF NOT EXISTS `cartao_azul` /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_bin */;
-USE `cartao_azul`;
 -- MySQL dump 10.13  Distrib 5.7.31, for Linux (x86_64)
 --
 -- Host: 127.0.0.1    Database: cartao_azul
@@ -30,9 +28,9 @@ CREATE TABLE `usuarios` (
   `senha` varchar(150) COLLATE utf8_bin NOT NULL,
   `nome` varchar(42) COLLATE utf8_bin DEFAULT NULL,
   `email` varchar(60) COLLATE utf8_bin DEFAULT NULL,
-  `celular` varchar(14) COLLATE utf8_bin DEFAULT NULL,
-  `telefone` varchar(14) COLLATE utf8_bin DEFAULT NULL,
-  `uf` enum('PR','SP','SC','RS','SE') COLLATE utf8_bin NOT NULL DEFAULT 'PR',
+  `celular` varchar(18) CHARACTER SET utf8 DEFAULT NULL,
+  `telefone` varchar(18) CHARACTER SET utf8 DEFAULT NULL,
+  `uf` enum('PR','SP','SC','RS','SE','pr','sp','sc','rs','se') CHARACTER SET utf8 NOT NULL DEFAULT 'PR',
   `cidade` varchar(65) COLLATE utf8_bin DEFAULT NULL,
   `tipo` enum('CPF','CNPJ') COLLATE utf8_bin NOT NULL DEFAULT 'CPF',
   `situacao` enum('Ativo','Inativo','Bloqueado','Suspenso','Excluído') COLLATE utf8_bin DEFAULT 'Ativo',
@@ -41,7 +39,7 @@ CREATE TABLE `usuarios` (
   KEY `idx_uf` (`uf`),
   KEY `idx_cidade` (`cidade`),
   KEY `idx_tipo` (`tipo`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -50,7 +48,7 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT INTO `usuarios` VALUES (1,'33314907841','e10adc3949ba59abbe56e057f20f883e','vicTOR Luis dOS SANTOS XAVIER DA SILVA con',NULL,NULL,NULL,'PR',NULL,'CPF','Ativo'),(2,'12398754309','123','AAA',NULL,NULL,NULL,'PR',NULL,'CPF','Ativo'),(3,'12398754309','123','Victor L. Con',NULL,NULL,NULL,'PR',NULL,'CPF','Ativo'),(4,'12398754309','123','Victor L. Santos',NULL,NULL,NULL,'PR',NULL,'CPF','Ativo'),(5,'12398754309','123','22',NULL,NULL,NULL,'PR',NULL,'CPF','Ativo'),(6,'12398754309','123','42',NULL,NULL,NULL,'PR',NULL,'CPF','Ativo'),(7,'12398754309','123','Victor L. Dev',NULL,NULL,NULL,'PR',NULL,'CPF','Ativo'),(8,'12398754309','123','Victor L. Dev',NULL,NULL,NULL,'PR',NULL,'CPF','Ativo'),(9,'12398754309','123','Victor L. Dev',NULL,NULL,NULL,'PR',NULL,'CPF','Ativo'),(10,'12398754309','123','vicTOR Luis dOS SANTOS XAVIER DA SILVA dev',NULL,NULL,NULL,'PR',NULL,'CPF','Ativo'),(11,'12398754309','123','vicTOR Luis dOS SANTOS XAVIER DA SILVA dev',NULL,NULL,NULL,'PR',NULL,'CPF','Ativo'),(12,'12398754309','123','vicTOR Luis dOS SANTOS XAVIER DA SILVA dev',NULL,NULL,NULL,'PR',NULL,'CPF','Ativo'),(13,'12398754309','123','42',NULL,NULL,NULL,'PR',NULL,'CPF','Ativo'),(14,'12398754309','123','vicTOR Luis dOS SANTOS XAVIER DA SILVA dev',NULL,NULL,NULL,'PR',NULL,'CPF','Ativo'),(15,'12398754309','123','Victor L. Dev',NULL,NULL,NULL,'PR',NULL,'CPF','Ativo');
+INSERT INTO `usuarios` VALUES (1,'33314907842','123','teste123','teste@teste.com','5541998500111',NULL,'PR','Sao Jose Dos Pinhais','CPF','Ativo'),(2,'321321312','423','rerw','rewrwe','4324432143',NULL,'','Sao Paulo','CPF','Ativo'),(3,'412341234','542454','dsadas','321312',NULL,NULL,'SC','Tes Silva','CPF','Ativo');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -64,15 +62,17 @@ UNLOCK TABLES;
 DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER `cartao_azul`.`usuarios_BEFORE_INSERT` BEFORE INSERT ON `usuarios` FOR EACH ROW
 BEGIN
-	IF LENGTH(NEW.identificador) > 11 THEN
-		SET NEW.tipo = 'CNPJ';
-	ELSE
-		SET NEW.tipo = 'CPF';
-	END IF;
-    
     IF LENGTH(NEW.nome) = 42 THEN
-		SET NEW.nome = CREATE_NICK_NAME(NEw.nome);
+        SET NEW.nome = CREATE_NICK_NAME(NEw.nome);
     END IF;
+    
+    SET NEW.cidade = checknoriz(NEW.cidade);
+    
+    SET NEW.uf = UPPER(NEW.uf);
+    
+    SET NEW.celular = STR_REPLACE(NEW.celular, '+()-[]{} .', '');
+    
+    SET NEW.telefone = STR_REPLACE(NEW.telefone, '+()-[]{} .', '');
 END */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -93,6 +93,14 @@ BEGIN
     IF LENGTH(NEW.nome) = 42 THEN
 		SET NEW.nome = CREATE_NICK_NAME(NEw.nome);
     END IF;
+    
+    SET NEW.cidade = checknoriz(NEW.cidade);
+    
+    SET NEW.uf = UPPER(NEW.uf);
+
+    SET NEW.celular = STR_REPLACE(NEW.celular, '+()-[]{} .', '');
+    
+    SET NEW.telefone = STR_REPLACE(NEW.telefone, '+()-[]{} .', '');
 END */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -107,6 +115,56 @@ DELIMITER ;
 --
 -- Dumping routines for database 'cartao_azul'
 --
+/*!50003 DROP FUNCTION IF EXISTS `checknoriz` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` FUNCTION `checknoriz`(nome VARCHAR(42)) RETURNS varchar(42) CHARSET utf8 COLLATE utf8_bin
+BEGIN
+    DECLARE qtd_palavras INT;
+    DECLARE palavra VARCHAR(25);
+    DECLARE frase VARCHAR(42) DEFAULT '';
+    DECLARE ind INT DEFAULT 1;
+    
+    SET qtd_palavras = (
+                            SELECT 
+                                LENGTH(nome) 
+                                    - LENGTH(REPLACE(nome, ' ', ''))+1
+                                    );
+
+    WHILE ind <= qtd_palavras DO
+        IF ind = 1 THEN
+            SET palavra = (SELECT SUBSTRING_INDEX(nome, ' ', 1));
+            SET frase = upFirst(palavra);
+        ELSE
+            SET palavra = (SELECT substr(nome,
+                                    length(SUBSTRING_INDEX(nome, 
+                                    ' ', 
+                                    ind-1))+2,
+                                    length(SUBSTRING_INDEX(nome, 
+                                    ' ', 
+                                    ind))-(length(SUBSTRING_INDEX(nome, 
+                                    ' ', ind-1))+1)
+                            ));
+			SET frase = CONCAT(frase,' ',upFirst(palavra));
+        END IF;
+        
+        SET ind = ind + 1;
+    END WHILE;
+
+    RETURN frase;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP FUNCTION IF EXISTS `create_nick_name` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -182,6 +240,64 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP FUNCTION IF EXISTS `STR_REPLACE` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` FUNCTION `STR_REPLACE`(lstring VARCHAR(250), lplace VARCHAR(250), lsub VARCHAR(250)) RETURNS varchar(250) CHARSET utf8 COLLATE utf8_bin
+BEGIN
+
+	DECLARE qtd_caracteres INT;
+    DECLARE i INT DEFAULT 1;
+    DECLARE retorno VARCHAR(250) DEFAULT lstring;
+    DECLARE item VARCHAR(1);
+    
+    SET qtd_caracteres = (SELECT LENGTH(lplace));
+    
+    WHILE i <= qtd_caracteres DO
+		SET item = (SELECT substr(lplace, i, 1));
+		SET retorno = (SELECT REPLACE(retorno, item, lsub));
+        SET i = i+1;
+    END WHILE;
+
+	RETURN retorno;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP FUNCTION IF EXISTS `upFirst` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` FUNCTION `upFirst`(palavra VARCHAR(40)) RETURNS varchar(40) CHARSET utf8 COLLATE utf8_bin
+BEGIN
+	DECLARE primeira_letra VARCHAR(1);
+    DECLARE restante_palavra VARCHAR(39);
+    
+    SET primeira_letra = (SELECT UPPER(SUBSTR(palavra, 1,1)));
+    SET restante_palavra = (SELECT LOWER(SUBSTR(palavra, 2, LENGTH(palavra))));
+    
+RETURN CONCAT(primeira_letra,restante_palavra);
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -192,4 +308,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2020-09-18 19:02:25
+-- Dump completed on 2020-09-18 21:51:49
